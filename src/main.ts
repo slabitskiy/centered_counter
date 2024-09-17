@@ -1,27 +1,46 @@
-import { factory } from "./factory";
+import { dom } from './dom';
+import { factory } from './factory';
+import { get_number_value_from_current_element, update_count } from './utils';
 
-let count = factory(0, 1);
+/**
+ * REMINDER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DO NOT SKIP!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ * to run UI (e2e) test cases probably u'll need to run npx playwright install in terminal
+ *
+ * I added data-test-id for ui testing, but I didn't implement any cleaner for that.
+ */
 
-function update_count_and_reset_counter() {}
+// create DOM singleton to better test change handler
+const start_at_control = dom.get_start_at_control();
+const step_control = dom.get_step_control();
+const count_button = dom.get_count_button();
+const current_count = dom.get_current_count();
 
-const start_at_control = document.getElementById(
-  "start_at",
-) as HTMLInputElement;
+let count = factory(
+  get_number_value_from_current_element(start_at_control),
+  get_number_value_from_current_element(step_control),
+);
 
-const step_control = document.getElementById("step") as HTMLInputElement;
+start_at_control.addEventListener('change', update_count_and_reset_counter);
+step_control.addEventListener('change', update_count_and_reset_counter);
 
-start_at_control?.addEventListener("change", () => {});
+count_button?.addEventListener('click', () => {
+  update_count(current_count, count());
+});
 
-step_control?.addEventListener("change", () => {});
+// exporting to test it
+export function update_count_and_reset_counter(this: HTMLInputElement) {
+  try {
+    this.classList.remove('error');
 
-const count_button = document.querySelector(
-  ".count_button",
-) as HTMLButtonElement;
+    const start = get_number_value_from_current_element(
+      dom.get_start_at_control(),
+    );
+    const step = get_number_value_from_current_element(dom.get_step_control());
 
-const current_count = document.querySelector(
-  ".current_count",
-) as HTMLSpanElement;
-
-function update_count() {}
-
-count_button.addEventListener("click", update_count);
+    count = factory(start, step);
+    update_count(current_count, count());
+  } catch {
+    this.classList.add('error');
+  }
+}
